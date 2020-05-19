@@ -1,0 +1,13 @@
+1    #PRINT_BEEJ  
+3    #SAVE_REG  save_reg as RO, with value 12 opcode
+0 # operand (argument)
+12
+4 #PRINT_REG  print reg R0
+0
+3
+1
+37
+5 # what assignment today is
+0
+1
+2
