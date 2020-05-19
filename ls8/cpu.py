@@ -7,7 +7,17 @@ class CPU:
 
     def __init__(self):
         """Construct a new CPU."""
-        pass
+        self.reg = [0] * 8
+        self.ram = [0] * 256
+        self.pc = 0
+
+    def ram_read(self, address):
+        """Accept the address to read and return the value stored there."""
+        return self.ram[address]
+
+    def ram_write(self, value, address):
+        """Accept a value to write, and the address to write it to."""
+        self.ram[address] = value
 
     def load(self):
         """Load a program into memory."""
@@ -62,4 +72,31 @@ class CPU:
 
     def run(self):
         """Run the CPU."""
-        pass
+        IR = self.pc
+        # operand_a = self.ram_read(IR + 1)
+        # operand_b = self.ram_read(IR + 2)
+        HLT = 0b00000001
+        LDI = 0b10000010
+        PRN = 0b01000111
+
+
+        halted = False
+
+        while not halted:
+            instruction = self.ram_read(IR)
+            operand_a = self.ram_read(IR + 1)
+            operand_b = self.ram_read(IR + 2)
+            if instruction == LDI:
+                reg_num = operand_a
+                value = operand_b
+                self.reg[reg_num] = value
+                IR += 3
+            elif instruction == PRN:
+                reg_num = self.reg[operand_a]
+                print(reg_num)
+                IR +=2
+            elif instruction == HLT:
+                halted = True
+            else:
+                print(f'unknown instruction {instruction} at address {pc}')
+                exit
