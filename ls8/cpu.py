@@ -95,6 +95,9 @@ class CPU:
         MUL = 0b10100010
         PUSH = 0b01000101
         POP = 0b01000110
+        CALL = 0b01010000
+        RET = 0b00010001
+        ADD = 0b10100000
 
         halted = False
 
@@ -115,6 +118,9 @@ class CPU:
                 IR += 2
             elif instruction == MUL:
                 self.alu('MUL', operand_a, operand_b)
+                IR += 3
+            elif instruction == ADD:
+                self.alu('ADD', operand_a, operand_b)
                 IR += 3
             elif instruction == PUSH:
                 # decrement SP:
@@ -137,6 +143,26 @@ class CPU:
                 #Increment SP.
                 self.reg[SP] += 1
                 IR += 2
+
+            elif instruction == CALL:
+                return_addr = IR + 2
+                self.reg[SP] -= 1
+                # push it on the stack
+                top_of_stack_addr = self.reg[SP]
+                self.ram[top_of_stack_addr] = return_addr
+                # set the IR to the subroutine addr
+                reg_num = operand_a
+                subroutine_addr = self.reg[reg_num]
+                # don't increment IR because want it to go to
+                # the subroutine_addr
+                IR = subroutine_addr
+
+            elif instruction == RET:
+                top_of_stack_addr = self.reg[SP]
+                return_addr = self.ram[top_of_stack_addr]
+                self.reg[SP] += 1
+
+                IR = return_addr
 
             elif instruction == HLT:
                 halted = True
