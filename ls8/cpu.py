@@ -11,6 +11,11 @@ class CPU:
         self.ram = [0] * 256
         self.pc = 0
 
+        # self.branchtable = {}
+        # self.branchtable[HLT] = self.hlt
+        # self.branchtable[LDI] = self.ldi
+        # self.branchtable[PRN] = self.prn
+
     def ram_read(self, address):
         """Accept the address to read and return the value stored there."""
         return self.ram[address]
@@ -24,18 +29,6 @@ class CPU:
 
         address = 0
 
-        # For now, we've just hardcoded a program:
-
-        # program = [
-        #     # From print8.ls8
-        #     0b10000010, # LDI R0,8
-        #     0b00000000,
-        #     0b00001000,
-        #     0b01000111, # PRN R0
-        #     0b00000000,
-        #     0b00000001, # HLT
-        # ]
-        program = self.ram
         try:
             with open(sys.argv[1]) as f:
                 for line in f:
@@ -43,13 +36,14 @@ class CPU:
                     if string_val == '':
                         continue
                     v = int(string_val, 2)
-
                     self.ram[address] = v
                     address += 1
-
-
         except:
-            print('Error, must provide valid file name')
+            if len(sys.argv) == 1:
+                print('Error, must provide filename.')
+
+            else:
+                print('Error, incorrect filename.')
             sys.exit(1)
 
 
@@ -85,15 +79,22 @@ class CPU:
 
         print()
 
+    # def hlt(self):
+    #     pass
+
+
     def run(self):
         """Run the CPU."""
         IR = self.pc
+        SP = 7
+        self.reg[SP] = 0xf4
 
         HLT = 0b00000001
         LDI = 0b10000010
         PRN = 0b01000111
         MUL = 0b10100010
-
+        PUSH = 0b01000101
+        POP = 0b01000110
 
         halted = False
 
@@ -101,6 +102,8 @@ class CPU:
             instruction = self.ram_read(IR)
             operand_a = self.ram_read(IR + 1)
             operand_b = self.ram_read(IR + 2)
+
+
             if instruction == LDI:
                 reg_num = operand_a
                 value = operand_b
@@ -113,6 +116,28 @@ class CPU:
             elif instruction == MUL:
                 self.alu('MUL', operand_a, operand_b)
                 IR += 3
+            elif instruction == PUSH:
+                # decrement SP:
+                self.reg[SP] -= 1
+                # get register #:
+                reg_num = operand_a
+                # get value out of register:
+                value = self.reg[reg_num]
+                # store value in memory at SP:
+                top_of_stack_addr = self.reg[SP]
+                self.ram[top_of_stack_addr] = value
+                IR += 2
+            elif instruction == POP:
+                reg_num = operand_a
+                #Copy the value from the address pointed to by SP to the given register.
+                top_of_stack_addr = self.reg[SP]
+                value = self.ram[top_of_stack_addr]
+                # store the value to the given register:
+                self.reg[reg_num] = value
+                #Increment SP.
+                self.reg[SP] += 1
+                IR += 2
+
             elif instruction == HLT:
                 halted = True
             else:
